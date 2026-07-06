@@ -6,15 +6,40 @@ on:
       - main
 
 jobs:
-  hello:
+  compose-test:
     runs-on: ubuntu-latest
+
+    env:
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: apppassword
+      DB_HOST: db
+      DB_NAME: appdb
+      DB_USER: appuser
+      DB_PASSWORD: apppassword
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: python-db-lab:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Debug compose config
+        run: docker compose config
+
       - name: Start stack
-        run: docker compose up -d --build --scale app=2
+        run: docker compose up -d --scale app=2
 
       - name: Show containers
         run: docker compose ps

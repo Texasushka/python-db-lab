@@ -40,7 +40,7 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
 
   app:
-    build: .
+    image: python-db-lab:ci
     restart: unless-stopped
     depends_on:
       db:
