@@ -52,7 +52,7 @@ jobs:
           tags: ${{ steps.image-name.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      
+
       - name: Create build info
         run: |
           {
@@ -114,7 +114,7 @@ jobs:
       - name: Wait for stack
         run: sleep 10
       
-      - name: Check jealth through nginx
+      - name: Check health through nginx
         run: curl -f localhost:8090/health
       
       - name: Check readiness through nginx
@@ -127,3 +127,27 @@ jobs:
       - name: Stop stack
         if: always()
         run: docker compose down -v
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - integration-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    environment:
+      name: production
+    
+    steps:
+      - name: Show deployment information
+        run: |
+          echo "Deploying image:"
+          echo "${{ needs.build.outputs.image }}"
+          echo "Commit:"
+          echo "$GITHUB_SHA"
+      
+      - name: Simulate production deployment
+        run: |
+          echo "Deployment started"
+          sleep 5
+          echo "Deployment completed"
