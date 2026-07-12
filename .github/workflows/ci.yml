@@ -52,6 +52,22 @@ jobs:
           tags: ${{ steps.image-name.outputs.image }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      
+      - name: Create build info
+        run: |
+          {
+            echo "Commit= $GITHUB_SHA"
+            echo "Repository= $GITHUB_REPOSITORY"
+            echo "Runner OS= $RUNNER_OS"
+            echo "Image= ${{ steps.image-name.outputs.image }}"
+            echo "Build date= $(date -u)"
+          } > build-info.txt
+        
+      - name: Upload build info
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-info
+          path: build-info.txt
     
     outputs:
       image: ${{ steps.image-name.outputs.image }}
@@ -72,13 +88,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Download build info
+        uses: actions/download-artifact@v4
+        with:
+          name: build-info
+      
+      - name: Show build info
+        run: cat build-info.txt
+
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN}}
-      
+    
       - name: Start stack
         env:
           APP_IMAGE: ${{ needs.build.outputs.image }}
